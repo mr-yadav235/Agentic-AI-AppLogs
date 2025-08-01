@@ -2,6 +2,19 @@
 
 An intelligent AI agent application with advanced logging and memory capabilities. This project combines AI-powered planning and execution with comprehensive application monitoring and log analysis.
 
+## 🎥 Demo
+
+Watch the application in action:
+
+https://github.com/mr-yadav235/Agentic-AI-AppLogs/assets/user-attachments/assets/a8c655d0-12e7-4e0c-a666-010b45c84269
+
+<details>
+<summary>Alternative: Download and view locally</summary>
+
+If the video doesn't load above, you can [download the demo video](./a8c655d0-12e7-4e0c-a666-010b45c84269.webm) and view it locally.
+
+</details>
+
 ## Features
 
 - 🤖 **AI Agent System**: Intelligent planning and task execution
