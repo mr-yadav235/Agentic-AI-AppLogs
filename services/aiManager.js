@@ -121,6 +121,15 @@ class AIManager {
       return preferredProvider;
     }
 
+    // Check for temporary user preference (from frontend)
+    if (this.routingConfig.temp_user_preference) {
+      const userPreferredProvider = this.routingConfig.temp_user_preference[0];
+      if (userPreferredProvider && this.providers[userPreferredProvider]) {
+        console.log(`🎯 Using user-selected model: ${userPreferredProvider}`);
+        return userPreferredProvider;
+      }
+    }
+
     const analysis = this.analyzeQueryComplexity(prompt);
     const preferredOrder = this.routingConfig[analysis.category] || this.routingConfig.default;
     

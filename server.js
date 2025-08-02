@@ -9,9 +9,70 @@ app.use(express.json());
 app.use(express.static('public'));
 
 app.post("/query", async (req, res) => {
-  const { question } = req.body;
-  const result = await runAgent(question);
-  res.send({ response: result });
+  const { question, preferredModel } = req.body;
+  
+  try {
+    // Store original AI manager preference for restoration
+    const originalPreference = aiManager.routingConfig.default[0];
+    let modelUsed = null;
+    
+    // Temporarily override model preference if specified
+    if (preferredModel && preferredModel !== 'auto') {
+      console.log(`🎯 User selected model: ${preferredModel}`);
+      // Modify the AI manager routing to prefer the selected model
+      aiManager.routingConfig.temp_user_preference = [preferredModel];
+    }
+    
+    // Capture console.log output to extract model information
+    const originalConsoleLog = console.log;
+    let modelInfo = null;
+    
+    console.log = (...args) => {
+      const message = args.join(' ');
+      if (message.includes('🤖 DSL generated using')) {
+        // Extract model info from the log message
+        const match = message.match(/using (\w+) \(([^)]+)\)/);
+        if (match) {
+          modelInfo = {
+            provider: match[1],
+            model: match[2]
+          };
+        }
+      }
+      originalConsoleLog(...args);
+    };
+    
+    // Run the agent
+    const result = await runAgent(question);
+    
+    // Restore console.log
+    console.log = originalConsoleLog;
+    
+    // Clean up temporary routing preference
+    if (aiManager.routingConfig.temp_user_preference) {
+      delete aiManager.routingConfig.temp_user_preference;
+    }
+    
+    // Determine which model was used
+    modelUsed = modelInfo ? modelInfo.provider : (preferredModel !== 'auto' ? preferredModel : 'auto');
+    
+    console.log(`📊 Query processed using model: ${modelUsed}`);
+    
+    res.json({ 
+      response: result,
+      modelUsed: modelUsed,
+      modelDetails: modelInfo,
+      userPreference: preferredModel || 'auto',
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Query error:', error);
+    res.status(500).json({ 
+      error: 'Failed to process query',
+      message: error.message 
+    });
+  }
 });
 
 // Multi-Model AI Endpoints

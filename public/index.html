@@ -325,6 +325,102 @@
       transform: translateY(-2px);
     }
 
+    /* AI Model Selector Styles */
+    .ai-model-selector {
+      padding: 1rem;
+      background: var(--light-bg);
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .model-dropdown {
+      max-width: 280px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .model-dropdown:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+    }
+
+    .model-status-indicators {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .model-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .model-status:hover {
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #9ca3af;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .status-indicator.online {
+      background: var(--success-color);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .status-indicator.offline {
+      background: var(--danger-color);
+    }
+
+    .status-indicator.checking {
+      background: var(--warning-color);
+      animation: pulse 1.5s infinite;
+    }
+
+    .model-status small {
+      font-size: 0.7rem;
+      color: #6b7280;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .model-info-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary-color);
+      padding: 0.25rem 0.75rem;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .model-performance {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
     @keyframes slideUp {
       from {
         opacity: 0;
@@ -386,6 +482,39 @@
         max-width: 300px;
         text-align: center;
       }
+
+      /* Mobile AI Model Selector */
+      .ai-model-selector {
+        padding: 0.75rem;
+      }
+
+      .ai-model-selector .d-flex {
+        flex-direction: column;
+        gap: 1rem !important;
+        align-items: stretch !important;
+      }
+
+      .model-dropdown {
+        max-width: 100%;
+      }
+
+      .model-status-indicators {
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .model-status {
+        padding: 0.5rem;
+      }
+
+      .model-status small {
+        font-size: 0.65rem;
+      }
+
+      .model-info-badge {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
+      }
     }
   </style>
 </head>
@@ -440,6 +569,37 @@
 
       <!-- Input Area -->
       <div class="chat-input-container">
+        <!-- AI Model Selection -->
+        <div class="ai-model-selector mb-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <label class="form-label mb-0 fw-semibold">
+                <i class="bi bi-cpu"></i> AI Model:
+              </label>
+              <select id="aiModelSelect" class="form-select form-select-sm model-dropdown">
+                <option value="auto" selected>🎯 Auto (Smart Routing)</option>
+                <option value="openai">🤖 GPT-4 (Best for structured output)</option>
+                <option value="claude">🧠 Claude 3 (Best for reasoning)</option>
+                <option value="gemini">⚡ Gemini Pro (Fast & efficient)</option>
+              </select>
+            </div>
+            <div class="model-status-indicators d-flex gap-2">
+              <div class="model-status" id="status-openai" title="OpenAI GPT-4">
+                <span class="status-indicator"></span>
+                <small>GPT-4</small>
+              </div>
+              <div class="model-status" id="status-claude" title="Anthropic Claude">
+                <span class="status-indicator"></span>
+                <small>Claude</small>
+              </div>
+              <div class="model-status" id="status-gemini" title="Google Gemini">
+                <span class="status-indicator"></span>
+                <small>Gemini</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="input-group">
           <textarea 
             id="chatInput" 
@@ -463,6 +623,14 @@
     const chatMessages = document.getElementById('chatMessages');
     const sendButton = document.getElementById('sendButton');
     const typingIndicator = document.getElementById('typingIndicator');
+    const aiModelSelect = document.getElementById('aiModelSelect');
+
+    // Model status tracking
+    let modelStatus = {
+      openai: 'checking',
+      claude: 'checking', 
+      gemini: 'checking'
+    };
 
     // Auto-resize textarea
     chatInput.addEventListener('input', function() {
@@ -483,21 +651,30 @@
       const message = chatInput.value.trim();
       if (!message) return;
 
-      // Add user message
-      addMessage('user', message);
+      const selectedModel = aiModelSelect.value;
+
+      // Add user message with model indicator
+      addMessage('user', message, selectedModel);
       chatInput.value = '';
       chatInput.style.height = 'auto';
 
-      // Show typing indicator
-      showTypingIndicator();
+      // Show typing indicator with selected model
+      showTypingIndicator(selectedModel);
 
       try {
+        let requestBody = { question: message };
+        
+        // Add model preference if not auto
+        if (selectedModel !== 'auto') {
+          requestBody.preferredModel = selectedModel;
+        }
+
         const response = await fetch('/query', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ question: message })
+          body: JSON.stringify(requestBody)
         });
 
         const data = await response.json();
@@ -505,8 +682,8 @@
         // Hide typing indicator
         hideTypingIndicator();
         
-        // Add bot response
-        addMessage('bot', data.response);
+        // Add bot response with model info
+        addMessage('bot', data.response, null, data.modelUsed || selectedModel);
         
       } catch (error) {
         console.error('Error:', error);
@@ -516,7 +693,7 @@
     }
 
     // Add message to chat
-    function addMessage(sender, content) {
+    function addMessage(sender, content, userModel = null, responseModel = null) {
       const messageDiv = document.createElement('div');
       messageDiv.className = `message message-${sender}`;
 
@@ -528,6 +705,22 @@
 
       const bubble = document.createElement('div');
       bubble.className = 'message-bubble';
+
+      // Add model badge for user messages
+      if (sender === 'user' && userModel && userModel !== 'auto') {
+        const modelBadge = document.createElement('div');
+        modelBadge.className = 'model-info-badge';
+        modelBadge.innerHTML = getModelIcon(userModel) + ' ' + getModelName(userModel);
+        bubble.appendChild(modelBadge);
+      }
+
+      // Add model badge for bot responses
+      if (sender === 'bot' && responseModel) {
+        const modelBadge = document.createElement('div');
+        modelBadge.className = 'model-info-badge';
+        modelBadge.innerHTML = getModelIcon(responseModel) + ' Powered by ' + getModelName(responseModel);
+        bubble.appendChild(modelBadge);
+      }
 
       const messageContent = document.createElement('div');
       messageContent.className = 'message-content';
@@ -577,8 +770,83 @@
       return formatted;
     }
 
+    // Get model icon
+    function getModelIcon(model) {
+      const icons = {
+        'openai': '🤖',
+        'claude': '🧠', 
+        'gemini': '⚡',
+        'auto': '🎯'
+      };
+      return icons[model] || '🤖';
+    }
+
+    // Get model display name
+    function getModelName(model) {
+      const names = {
+        'openai': 'GPT-4',
+        'claude': 'Claude 3',
+        'gemini': 'Gemini Pro',
+        'auto': 'Smart Routing'
+      };
+      return names[model] || model;
+    }
+
+    // Update model status indicators
+    function updateModelStatusIndicators() {
+      Object.keys(modelStatus).forEach(model => {
+        const indicator = document.querySelector(`#status-${model} .status-indicator`);
+        if (indicator) {
+          indicator.className = `status-indicator ${modelStatus[model]}`;
+        }
+      });
+    }
+
+    // Check AI model health
+    async function checkModelHealth() {
+      try {
+        // Set all to checking state
+        Object.keys(modelStatus).forEach(model => {
+          modelStatus[model] = 'checking';
+        });
+        updateModelStatusIndicators();
+
+        const response = await fetch('/ai/health');
+        const healthData = await response.json();
+        
+        // Update status based on health check
+        Object.keys(modelStatus).forEach(model => {
+          if (healthData.providers && healthData.providers[model]) {
+            modelStatus[model] = healthData.providers[model].status === 'healthy' ? 'online' : 'offline';
+          } else {
+            modelStatus[model] = 'offline';
+          }
+        });
+        
+        updateModelStatusIndicators();
+        console.log('Model health check completed:', healthData);
+        
+      } catch (error) {
+        console.error('Health check failed:', error);
+        // Mark all as offline on error
+        Object.keys(modelStatus).forEach(model => {
+          modelStatus[model] = 'offline';
+        });
+        updateModelStatusIndicators();
+      }
+    }
+
     // Show typing indicator
-    function showTypingIndicator() {
+    function showTypingIndicator(selectedModel = null) {
+      if (selectedModel && selectedModel !== 'auto') {
+        const modelInfo = getModelIcon(selectedModel) + ' ' + getModelName(selectedModel);
+        document.querySelector('#typingIndicator div:last-child').innerHTML = 
+          `${modelInfo} is thinking<div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+      } else {
+        document.querySelector('#typingIndicator div:last-child').innerHTML = 
+          `AI is thinking<div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+      }
+      
       typingIndicator.classList.add('show');
       chatMessages.scrollTop = chatMessages.scrollHeight;
       sendButton.disabled = true;
@@ -596,9 +864,50 @@
       sendMessage();
     }
 
-    // Focus on input when page loads
-    window.addEventListener('load', () => {
+    // Add click handlers for model status indicators
+    function addModelClickHandlers() {
+      document.querySelectorAll('.model-status').forEach(status => {
+        status.addEventListener('click', () => {
+          const model = status.id.replace('status-', '');
+          if (modelStatus[model] === 'online') {
+            aiModelSelect.value = model;
+            // Visual feedback
+            status.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+              status.style.transform = 'scale(1)';
+            }, 200);
+          }
+        });
+      });
+    }
+
+    // Model selector change handler
+    aiModelSelect.addEventListener('change', function() {
+      const selectedModel = this.value;
+      console.log('Model selected:', selectedModel);
+      
+      // Update placeholder text based on selected model
+      if (selectedModel === 'auto') {
+        chatInput.placeholder = "Ask me about your logs... (AI will choose the best model)";
+      } else {
+        const modelName = getModelName(selectedModel);
+        chatInput.placeholder = `Ask me about your logs... (using ${modelName})`;
+      }
+    });
+
+    // Initialize on page load
+    window.addEventListener('load', async () => {
       chatInput.focus();
+      addModelClickHandlers();
+      
+      // Initial health check
+      await checkModelHealth();
+      
+      // Set up periodic health checks (every 2 minutes)
+      setInterval(checkModelHealth, 120000);
+      
+      console.log('🤖 AI Model Selection initialized');
+      console.log('Available models:', Object.keys(modelStatus));
     });
   </script>
 </body>
