@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { runAgent } = require("./agent/agent");
 const { aiManager } = require("./services/aiManager");
+const { configManager } = require("./services/configManager");
 
 const app = express();
 app.use(cors());
@@ -248,9 +249,272 @@ app.post("/ai/query/:provider", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("🚀 Agent listening on http://localhost:3000");
-  console.log("📊 AI Stats: http://localhost:3000/ai/stats");
-  console.log("🔍 AI Health: http://localhost:3000/ai/health");
-  console.log("⚡ AI Compare: POST http://localhost:3000/ai/compare");
+// Admin Configuration Endpoints
+// =============================
+
+// Serve admin page
+app.get('/admin', (req, res) => {
+  res.sendFile(__dirname + '/public/admin.html');
 });
+
+// Get current configuration
+app.get('/admin/config', (req, res) => {
+  try {
+    const config = configManager.getConfiguration();
+    // Don't send sensitive data like API keys in plain text
+    const safeConfig = {
+      ...config,
+      ai: {
+        openai: { ...config.ai.openai, apiKey: config.ai.openai.apiKey ? '***CONFIGURED***' : '' },
+        claude: { ...config.ai.claude, apiKey: config.ai.claude.apiKey ? '***CONFIGURED***' : '' },
+        gemini: { ...config.ai.gemini, apiKey: config.ai.gemini.apiKey ? '***CONFIGURED***' : '' }
+      },
+      elasticsearch: {
+        ...config.elasticsearch,
+        password: config.elasticsearch.password ? '***CONFIGURED***' : ''
+      }
+    };
+    res.json(safeConfig);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Save AI configuration
+app.post('/admin/config/ai', async (req, res) => {
+  try {
+    const { openai, claude, gemini } = req.body;
+    
+    // Update configuration
+    const success = await configManager.updateAIConfiguration({
+      openai: openai || {},
+      claude: claude || {},
+      gemini: gemini || {}
+    });
+    
+    if (success) {
+      // Apply to environment and reinitialize AI manager
+      configManager.applyToEnvironment();
+      aiManager.initializeProviders();
+      
+      res.json({ success: true, message: 'AI configuration saved successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to save AI configuration' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Save Elasticsearch configuration
+app.post('/admin/config/elasticsearch', async (req, res) => {
+  try {
+    const { url, username, password, caCert } = req.body;
+    
+    const success = await configManager.updateElasticsearchConfiguration({
+      url,
+      username,
+      password,
+      caCert
+    });
+    
+    if (success) {
+      // Apply to environment
+      configManager.applyToEnvironment();
+      
+      res.json({ success: true, message: 'Elasticsearch configuration saved successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to save Elasticsearch configuration' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Save system configuration
+app.post('/admin/config/system', async (req, res) => {
+  try {
+    const { defaultRouting, healthCheckInterval, enableFallback, logPerformance } = req.body;
+    
+    const success = await configManager.updateSystemConfiguration({
+      defaultRouting,
+      healthCheckInterval,
+      enableFallback,
+      logPerformance
+    });
+    
+    if (success) {
+      // Apply to environment
+      configManager.applyToEnvironment();
+      
+      res.json({ success: true, message: 'System configuration saved successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to save system configuration' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Test individual AI model
+app.post('/admin/test-ai/:model', async (req, res) => {
+  const { model } = req.params;
+  const { apiKey } = req.body;
+  
+  if (!apiKey) {
+    return res.status(400).json({ success: false, error: 'API key is required' });
+  }
+  
+  try {
+    const startTime = Date.now();
+    let result;
+    
+    // Create temporary AI manager instance for testing
+    const testOptions = {
+      enableFallback: false,
+      maxTokens: 10
+    };
+    
+    // Temporarily set the API key in environment
+    const originalKey = process.env[getApiKeyEnvName(model)];
+    process.env[getApiKeyEnvName(model)] = apiKey;
+    
+    try {
+      // Test the specific model
+      result = await aiManager.query('Test connection: respond with "OK"', {
+        preferredProvider: model,
+        ...testOptions
+      });
+      
+      const responseTime = Date.now() - startTime;
+      
+      // Update model status
+      await configManager.updateModelStatus(model, 'online');
+      
+      res.json({
+        success: true,
+        responseTime,
+        model: result.model,
+        response: result.content?.substring(0, 50) + '...'
+      });
+      
+    } finally {
+      // Restore original API key
+      if (originalKey) {
+        process.env[getApiKeyEnvName(model)] = originalKey;
+      } else {
+        delete process.env[getApiKeyEnvName(model)];
+      }
+    }
+    
+  } catch (error) {
+    await configManager.updateModelStatus(model, 'offline');
+    res.json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Test Elasticsearch connection
+app.post('/admin/test-elasticsearch', async (req, res) => {
+  const { url, username, password, caCert } = req.body;
+  
+  if (!url) {
+    return res.status(400).json({ success: false, error: 'Elasticsearch URL is required' });
+  }
+  
+  try {
+    const { Client } = require('@elastic/elasticsearch');
+    
+    // Build client configuration
+    const clientConfig = { node: url };
+    
+    if (username && password) {
+      clientConfig.auth = { username, password };
+    }
+    
+    if (caCert) {
+      clientConfig.tls = {
+        ca: caCert,
+        rejectUnauthorized: true
+      };
+    }
+    
+    const testClient = new Client(clientConfig);
+    
+    // Test connection
+    const response = await testClient.cluster.health();
+    
+    await configManager.updateElasticsearchStatus('online');
+    
+    res.json({
+      success: true,
+      clusterName: response.body.cluster_name,
+      status: response.body.status,
+      nodes: response.body.number_of_nodes
+    });
+    
+  } catch (error) {
+    await configManager.updateElasticsearchStatus('offline');
+    res.json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Restart system
+app.post('/admin/restart', async (req, res) => {
+  try {
+    res.json({ success: true, message: 'System restart initiated' });
+    
+    console.log('🔄 System restart requested from admin panel');
+    
+    // Give time for response to be sent
+    setTimeout(() => {
+      console.log('🔄 Restarting system...');
+      process.exit(0);
+    }, 1000);
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Helper function to get API key environment variable name
+function getApiKeyEnvName(model) {
+  const envNames = {
+    'openai': 'OPENAI_API_KEY',
+    'claude': 'ANTHROPIC_API_KEY',
+    'gemini': 'GOOGLE_API_KEY'
+  };
+  return envNames[model];
+}
+
+// Initialize configuration manager and start server
+async function startServer() {
+  try {
+    // Initialize configuration manager
+    await configManager.initialize();
+    
+    // Apply configuration to environment
+    configManager.applyToEnvironment();
+    
+    // Start server
+    app.listen(3000, () => {
+      console.log("🚀 Agent listening on http://localhost:3000");
+      console.log("⚙️  Admin Panel: http://localhost:3000/admin");
+      console.log("📊 AI Stats: http://localhost:3000/ai/stats");
+      console.log("🔍 AI Health: http://localhost:3000/ai/health");
+      console.log("⚡ AI Compare: POST http://localhost:3000/ai/compare");
+    });
+    
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();

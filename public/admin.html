@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚙️ Admin Configuration - Agentic AI</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary-color: #6366f1;
+      --secondary-color: #8b5cf6;
+      --success-color: #10b981;
+      --danger-color: #ef4444;
+      --warning-color: #f59e0b;
+      --info-color: #3b82f6;
+      --dark-color: #1f2937;
+      --light-bg: #f8fafc;
+      --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .admin-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .admin-header {
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .admin-header h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .admin-header .subtitle {
+      opacity: 0.9;
+      font-size: 1rem;
+      margin-top: 0.5rem;
+      font-weight: 300;
+    }
+
+    .back-to-chat {
+      position: absolute;
+      left: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 25px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .back-to-chat:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      text-decoration: none;
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .admin-content {
+      padding: 2rem;
+    }
+
+    .config-section {
+      background: var(--light-bg);
+      border-radius: 15px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid #e5e7eb;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .section-header h3 {
+      margin: 0;
+      color: var(--dark-color);
+      font-weight: 600;
+    }
+
+    .section-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--dark-color);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-control {
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+    }
+
+    .input-group-text {
+      background: var(--light-bg);
+      border: 2px solid #e5e7eb;
+      border-right: none;
+    }
+
+    .input-group .form-control {
+      border-left: none;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      border: none;
+      border-radius: 10px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline-primary {
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+      border-radius: 10px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background: var(--success-color);
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+    }
+
+    .btn-warning {
+      background: var(--warning-color);
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+
+    .status-online {
+      background: var(--success-color);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .status-offline {
+      background: var(--danger-color);
+    }
+
+    .status-checking {
+      background: var(--warning-color);
+      animation: pulse 1.5s infinite;
+    }
+
+    .config-status {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+      border: 1px solid #e5e7eb;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .alert {
+      border-radius: 10px;
+      border: none;
+      padding: 1rem 1.25rem;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      color: #065f46;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .alert-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #991b1b;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .alert-warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: #92400e;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .textarea-large {
+      min-height: 120px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.9rem;
+    }
+
+    .form-text {
+      color: #6b7280;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .admin-header {
+        padding: 1.5rem;
+      }
+
+      .admin-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .back-to-chat {
+        position: static;
+        transform: none;
+        margin-bottom: 1rem;
+      }
+
+      .admin-content {
+        padding: 1rem;
+      }
+
+      .config-section {
+        padding: 1.5rem;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .action-buttons .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Header -->
+    <div class="admin-header">
+      <a href="/" class="back-to-chat">
+        <i class="bi bi-arrow-left"></i>
+        Back to Chat
+      </a>
+      <h1>
+        <i class="bi bi-gear-fill"></i>
+        Admin Configuration
+      </h1>
+      <div class="subtitle">Configure AI models, Elasticsearch, and system settings</div>
+    </div>
+
+    <!-- Content -->
+    <div class="admin-content">
+      <!-- Alerts -->
+      <div id="alertContainer"></div>
+
+      <!-- AI Models Configuration -->
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="bi bi-cpu"></i>
+          </div>
+          <h3>AI Models Configuration</h3>
+        </div>
+
+        <div class="row">
+          <!-- OpenAI Configuration -->
+          <div class="col-md-6 mb-4">
+            <div class="config-status">
+              <h5>
+                <span class="status-indicator" id="openai-status"></span>
+                🤖 OpenAI GPT-4
+              </h5>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-key"></i>
+                  API Key
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">sk-</span>
+                  <input type="password" class="form-control" id="openaiApiKey" placeholder="Enter OpenAI API key">
+                  <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('openaiApiKey')">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                <div class="form-text">Best for structured output and code generation</div>
+              </div>
+              <button class="btn btn-success btn-sm" onclick="testConnection('openai')">
+                <i class="bi bi-lightning"></i> Test Connection
+              </button>
+            </div>
+          </div>
+
+          <!-- Claude Configuration -->
+          <div class="col-md-6 mb-4">
+            <div class="config-status">
+              <h5>
+                <span class="status-indicator" id="claude-status"></span>
+                🧠 Anthropic Claude
+              </h5>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-key"></i>
+                  API Key
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">sk-ant-</span>
+                  <input type="password" class="form-control" id="claudeApiKey" placeholder="Enter Claude API key">
+                  <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('claudeApiKey')">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                <div class="form-text">Best for complex reasoning and analysis</div>
+              </div>
+              <button class="btn btn-success btn-sm" onclick="testConnection('claude')">
+                <i class="bi bi-lightning"></i> Test Connection
+              </button>
+            </div>
+          </div>
+
+          <!-- Gemini Configuration -->
+          <div class="col-md-6 mb-4">
+            <div class="config-status">
+              <h5>
+                <span class="status-indicator" id="gemini-status"></span>
+                ⚡ Google Gemini
+              </h5>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-key"></i>
+                  API Key
+                </label>
+                <input type="password" class="form-control" id="geminiApiKey" placeholder="Enter Google API key">
+                <div class="form-text">Fast and cost-effective processing</div>
+              </div>
+              <button class="btn btn-success btn-sm" onclick="testConnection('gemini')">
+                <i class="bi bi-lightning"></i> Test Connection
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="saveAIConfiguration()">
+            <i class="bi bi-save"></i> Save AI Configuration
+          </button>
+          <button class="btn btn-outline-primary" onclick="testAllAIModels()">
+            <i class="bi bi-lightning-charge"></i> Test All Models
+          </button>
+        </div>
+      </div>
+
+      <!-- Elasticsearch Configuration -->
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="bi bi-database"></i>
+          </div>
+          <h3>Elasticsearch Configuration</h3>
+        </div>
+
+        <div class="row">
+          <div class="col-md-8">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-globe"></i>
+                Elasticsearch URL
+              </label>
+              <input type="url" class="form-control" id="elasticsearchUrl" placeholder="http://localhost:9200">
+              <div class="form-text">The URL of your Elasticsearch cluster</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label">Connection Status</label>
+              <div class="config-status">
+                <span class="status-indicator" id="elasticsearch-status"></span>
+                <span id="elasticsearch-status-text">Not tested</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-person"></i>
+                Username
+              </label>
+              <input type="text" class="form-control" id="elasticsearchUsername" placeholder="elastic">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-lock"></i>
+                Password
+              </label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="elasticsearchPassword" placeholder="Enter password">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('elasticsearchPassword')">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <i class="bi bi-shield-check"></i>
+            CA Certificate (Optional)
+          </label>
+          <textarea class="form-control textarea-large" id="elasticsearchCaCert" 
+                    placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
+          <div class="form-text">Paste your CA certificate here for secure HTTPS connections</div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="saveElasticsearchConfiguration()">
+            <i class="bi bi-save"></i> Save Elasticsearch Configuration
+          </button>
+          <button class="btn btn-outline-primary" onclick="testElasticsearchConnection()">
+            <i class="bi bi-lightning"></i> Test Connection
+          </button>
+        </div>
+      </div>
+
+      <!-- System Settings -->
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="bi bi-sliders"></i>
+          </div>
+          <h3>System Settings</h3>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-router"></i>
+                Default AI Model Routing
+              </label>
+              <select class="form-control" id="defaultRouting">
+                <option value="auto">🎯 Smart Auto-Routing</option>
+                <option value="openai">🤖 Always use OpenAI</option>
+                <option value="claude">🧠 Always use Claude</option>
+                <option value="gemini">⚡ Always use Gemini</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-clock"></i>
+                Health Check Interval (minutes)
+              </label>
+              <input type="number" class="form-control" id="healthCheckInterval" min="1" max="60" value="2">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="enableFallback" checked>
+            <label class="form-check-label" for="enableFallback">
+              <i class="bi bi-arrow-repeat"></i>
+              Enable automatic fallback between AI models
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="logPerformance" checked>
+            <label class="form-check-label" for="logPerformance">
+              <i class="bi bi-graph-up"></i>
+              Enable performance logging and metrics
+            </label>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="saveSystemSettings()">
+            <i class="bi bi-save"></i> Save System Settings
+          </button>
+          <button class="btn btn-warning" onclick="restartSystem()">
+            <i class="bi bi-arrow-clockwise"></i> Restart System
+          </button>
+        </div>
+      </div>
+
+      <!-- Configuration Export/Import -->
+      <div class="config-section">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="bi bi-download"></i>
+          </div>
+          <h3>Configuration Backup & Restore</h3>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Export Configuration</h5>
+            <p class="text-muted">Download your current configuration as a backup file</p>
+            <button class="btn btn-outline-primary" onclick="exportConfiguration()">
+              <i class="bi bi-download"></i> Export Configuration
+            </button>
+          </div>
+          <div class="col-md-6">
+            <h5>Import Configuration</h5>
+            <p class="text-muted">Upload and restore a configuration backup file</p>
+            <input type="file" class="form-control" id="configFile" accept=".json">
+            <button class="btn btn-outline-primary mt-2" onclick="importConfiguration()">
+              <i class="bi bi-upload"></i> Import Configuration
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Configuration state
+    let currentConfig = {
+      ai: {
+        openai: { apiKey: '', status: 'unchecked' },
+        claude: { apiKey: '', status: 'unchecked' },
+        gemini: { apiKey: '', status: 'unchecked' }
+      },
+      elasticsearch: {
+        url: 'http://localhost:9200',
+        username: '',
+        password: '',
+        caCert: '',
+        status: 'unchecked'
+      },
+      system: {
+        defaultRouting: 'auto',
+        healthCheckInterval: 2,
+        enableFallback: true,
+        logPerformance: true
+      }
+    };
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async function() {
+      showAlert('info', 'Loading configuration...', 2000);
+      await loadConfiguration();
+      updateStatusIndicators();
+      await checkAllConnectionsOnLoad();
+    });
+
+    // Load configuration from server
+    async function loadConfiguration() {
+      try {
+        const response = await fetch('/admin/config');
+        if (response.ok) {
+          const config = await response.json();
+          currentConfig = { ...currentConfig, ...config };
+          populateForm();
+        }
+      } catch (error) {
+        console.error('Failed to load configuration:', error);
+        showAlert('warning', 'Could not load existing configuration. Using defaults.');
+      }
+    }
+
+    // Populate form with current configuration
+    function populateForm() {
+      // AI Configuration
+      document.getElementById('openaiApiKey').value = currentConfig.ai.openai.apiKey || '';
+      document.getElementById('claudeApiKey').value = currentConfig.ai.claude.apiKey || '';
+      document.getElementById('geminiApiKey').value = currentConfig.ai.gemini.apiKey || '';
+
+      // Elasticsearch Configuration
+      document.getElementById('elasticsearchUrl').value = currentConfig.elasticsearch.url || 'http://localhost:9200';
+      document.getElementById('elasticsearchUsername').value = currentConfig.elasticsearch.username || '';
+      document.getElementById('elasticsearchPassword').value = currentConfig.elasticsearch.password || '';
+      document.getElementById('elasticsearchCaCert').value = currentConfig.elasticsearch.caCert || '';
+
+      // System Settings
+      document.getElementById('defaultRouting').value = currentConfig.system.defaultRouting || 'auto';
+      document.getElementById('healthCheckInterval').value = currentConfig.system.healthCheckInterval || 2;
+      document.getElementById('enableFallback').checked = currentConfig.system.enableFallback !== false;
+      document.getElementById('logPerformance').checked = currentConfig.system.logPerformance !== false;
+    }
+
+    // Update status indicators
+    function updateStatusIndicators() {
+      updateIndicator('openai-status', currentConfig.ai.openai.status);
+      updateIndicator('claude-status', currentConfig.ai.claude.status);
+      updateIndicator('gemini-status', currentConfig.ai.gemini.status);
+      updateIndicator('elasticsearch-status', currentConfig.elasticsearch.status);
+      
+      document.getElementById('elasticsearch-status-text').textContent = 
+        getStatusText(currentConfig.elasticsearch.status);
+    }
+
+    function updateIndicator(elementId, status) {
+      const indicator = document.getElementById(elementId);
+      indicator.className = `status-indicator status-${status}`;
+    }
+
+    function getStatusText(status) {
+      const statusMap = {
+        'online': 'Connected',
+        'offline': 'Disconnected',
+        'checking': 'Testing...',
+        'unchecked': 'Not tested',
+        'error': 'Error'
+      };
+      return statusMap[status] || 'Unknown';
+    }
+
+    // Show alert messages
+    function showAlert(type, message, autoHide = null) {
+      const alertContainer = document.getElementById('alertContainer');
+      const alertId = 'alert-' + Date.now();
+      
+      const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" id="${alertId}">
+          <i class="bi bi-${getAlertIcon(type)}"></i>
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      `;
+      
+      alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+      
+      if (autoHide) {
+        setTimeout(() => {
+          const alert = document.getElementById(alertId);
+          if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+          }
+        }, autoHide);
+      }
+    }
+
+    function getAlertIcon(type) {
+      const icons = {
+        'success': 'check-circle',
+        'danger': 'exclamation-triangle',
+        'warning': 'exclamation-triangle',
+        'info': 'info-circle'
+      };
+      return icons[type] || 'info-circle';
+    }
+
+    // Toggle password visibility
+    function togglePassword(fieldId) {
+      const field = document.getElementById(fieldId);
+      const button = field.nextElementSibling;
+      const icon = button.querySelector('i');
+      
+      if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+      } else {
+        field.type = 'password';
+        icon.className = 'bi bi-eye';
+      }
+    }
+
+    // Test individual AI model connection
+    async function testConnection(model) {
+      const apiKey = document.getElementById(`${model}ApiKey`).value;
+      if (!apiKey) {
+        showAlert('warning', `Please enter ${model.toUpperCase()} API key first`);
+        return;
+      }
+
+      currentConfig.ai[model].status = 'checking';
+      updateIndicator(`${model}-status`, 'checking');
+
+      try {
+        const response = await fetch(`/admin/test-ai/${model}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          currentConfig.ai[model].status = 'online';
+          showAlert('success', `${model.toUpperCase()} connection successful! Response time: ${result.responseTime}ms`);
+        } else {
+          currentConfig.ai[model].status = 'offline';
+          showAlert('danger', `${model.toUpperCase()} connection failed: ${result.error}`);
+        }
+      } catch (error) {
+        currentConfig.ai[model].status = 'error';
+        showAlert('danger', `Failed to test ${model.toUpperCase()}: ${error.message}`);
+      }
+
+      updateIndicator(`${model}-status`, currentConfig.ai[model].status);
+    }
+
+    // Test all AI models
+    async function testAllAIModels() {
+      showAlert('info', 'Testing all AI model connections...', 3000);
+      
+      const models = ['openai', 'claude', 'gemini'];
+      const promises = models.map(model => testConnection(model));
+      
+      await Promise.all(promises);
+      showAlert('info', 'All AI model tests completed. Check individual status indicators.');
+    }
+
+    // Test Elasticsearch connection
+    async function testElasticsearchConnection() {
+      const config = {
+        url: document.getElementById('elasticsearchUrl').value,
+        username: document.getElementById('elasticsearchUsername').value,
+        password: document.getElementById('elasticsearchPassword').value,
+        caCert: document.getElementById('elasticsearchCaCert').value
+      };
+
+      if (!config.url) {
+        showAlert('warning', 'Please enter Elasticsearch URL first');
+        return;
+      }
+
+      currentConfig.elasticsearch.status = 'checking';
+      updateIndicator('elasticsearch-status', 'checking');
+      document.getElementById('elasticsearch-status-text').textContent = 'Testing...';
+
+      try {
+        const response = await fetch('/admin/test-elasticsearch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          currentConfig.elasticsearch.status = 'online';
+          showAlert('success', `Elasticsearch connection successful! Cluster: ${result.clusterName}`);
+          document.getElementById('elasticsearch-status-text').textContent = 'Connected';
+        } else {
+          currentConfig.elasticsearch.status = 'offline';
+          showAlert('danger', `Elasticsearch connection failed: ${result.error}`);
+          document.getElementById('elasticsearch-status-text').textContent = 'Disconnected';
+        }
+      } catch (error) {
+        currentConfig.elasticsearch.status = 'error';
+        showAlert('danger', `Failed to test Elasticsearch: ${error.message}`);
+        document.getElementById('elasticsearch-status-text').textContent = 'Error';
+      }
+
+      updateIndicator('elasticsearch-status', currentConfig.elasticsearch.status);
+    }
+
+    // Save AI configuration
+    async function saveAIConfiguration() {
+      const config = {
+        openai: { apiKey: document.getElementById('openaiApiKey').value },
+        claude: { apiKey: document.getElementById('claudeApiKey').value },
+        gemini: { apiKey: document.getElementById('geminiApiKey').value }
+      };
+
+      try {
+        const response = await fetch('/admin/config/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+
+        if (response.ok) {
+          showAlert('success', 'AI configuration saved successfully!');
+          currentConfig.ai = { ...currentConfig.ai, ...config };
+        } else {
+          throw new Error('Failed to save configuration');
+        }
+      } catch (error) {
+        showAlert('danger', `Failed to save AI configuration: ${error.message}`);
+      }
+    }
+
+    // Save Elasticsearch configuration
+    async function saveElasticsearchConfiguration() {
+      const config = {
+        url: document.getElementById('elasticsearchUrl').value,
+        username: document.getElementById('elasticsearchUsername').value,
+        password: document.getElementById('elasticsearchPassword').value,
+        caCert: document.getElementById('elasticsearchCaCert').value
+      };
+
+      try {
+        const response = await fetch('/admin/config/elasticsearch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+
+        if (response.ok) {
+          showAlert('success', 'Elasticsearch configuration saved successfully!');
+          currentConfig.elasticsearch = { ...currentConfig.elasticsearch, ...config };
+        } else {
+          throw new Error('Failed to save configuration');
+        }
+      } catch (error) {
+        showAlert('danger', `Failed to save Elasticsearch configuration: ${error.message}`);
+      }
+    }
+
+    // Save system settings
+    async function saveSystemSettings() {
+      const config = {
+        defaultRouting: document.getElementById('defaultRouting').value,
+        healthCheckInterval: parseInt(document.getElementById('healthCheckInterval').value),
+        enableFallback: document.getElementById('enableFallback').checked,
+        logPerformance: document.getElementById('logPerformance').checked
+      };
+
+      try {
+        const response = await fetch('/admin/config/system', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+
+        if (response.ok) {
+          showAlert('success', 'System settings saved successfully!');
+          currentConfig.system = { ...currentConfig.system, ...config };
+        } else {
+          throw new Error('Failed to save configuration');
+        }
+      } catch (error) {
+        showAlert('danger', `Failed to save system settings: ${error.message}`);
+      }
+    }
+
+    // Restart system
+    async function restartSystem() {
+      if (!confirm('Are you sure you want to restart the system? This will temporarily interrupt service.')) {
+        return;
+      }
+
+      try {
+        showAlert('info', 'Restarting system... Please wait.');
+        await fetch('/admin/restart', { method: 'POST' });
+        
+        setTimeout(() => {
+          showAlert('success', 'System restarted successfully!');
+          // Reload the page after restart
+          setTimeout(() => location.reload(), 2000);
+        }, 3000);
+      } catch (error) {
+        showAlert('danger', `Failed to restart system: ${error.message}`);
+      }
+    }
+
+    // Export configuration
+    function exportConfiguration() {
+      const config = {
+        ...currentConfig,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+      };
+
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `agentic-ai-config-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showAlert('success', 'Configuration exported successfully!');
+    }
+
+    // Import configuration
+    function importConfiguration() {
+      const fileInput = document.getElementById('configFile');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        showAlert('warning', 'Please select a configuration file to import');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedConfig = JSON.parse(e.target.result);
+          
+          if (confirm('This will replace your current configuration. Are you sure?')) {
+            currentConfig = { ...currentConfig, ...importedConfig };
+            populateForm();
+            updateStatusIndicators();
+            showAlert('success', 'Configuration imported successfully!');
+            
+            // Save the imported configuration
+            saveAIConfiguration();
+            saveElasticsearchConfiguration();
+            saveSystemSettings();
+          }
+        } catch (error) {
+          showAlert('danger', 'Invalid configuration file format');
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    // Check all connections on page load
+    async function checkAllConnectionsOnLoad() {
+      // Only test connections if API keys are already configured
+      const models = ['openai', 'claude', 'gemini'];
+      
+      for (const model of models) {
+        const apiKey = document.getElementById(`${model}ApiKey`).value;
+        if (apiKey) {
+          await testConnection(model);
+        }
+      }
+
+      // Test Elasticsearch if URL is configured
+      const esUrl = document.getElementById('elasticsearchUrl').value;
+      if (esUrl && esUrl !== 'http://localhost:9200') {
+        await testElasticsearchConnection();
+      }
+    }
+  </script>
+</body>
+</html>

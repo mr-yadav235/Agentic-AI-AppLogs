@@ -47,6 +47,12 @@ class AIManager {
    * Initialize AI providers based on available API keys
    */
   initializeProviders() {
+    // Reset providers
+    this.providers = {
+      openai: null,
+      claude: null,
+      gemini: null
+    };
     // OpenAI
     if (process.env.OPENAI_API_KEY) {
       this.providers.openai = new OpenAI({ 
