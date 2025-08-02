@@ -1,4 +1,4 @@
-const { askLLM } = require('../services/openai');
+const { aiManager } = require('../services/aiManager');
 const query = {
   "query": {
     "bool": {
@@ -68,7 +68,17 @@ IMPORTANT: Return only the raw JSON object, starting with { and ending with }.
 `;
 
 console.log("PROMPT:", prompt);
-  const response = await askLLM(prompt);
+  
+  // Use AI manager with intelligent model routing for Elasticsearch DSL generation
+  const aiResponse = await aiManager.query(prompt, {
+    preferredProvider: 'openai', // OpenAI typically excels at structured JSON generation
+    model: 'gpt-4',
+    temperature: 0.3, // Lower temperature for more consistent JSON output
+    maxTokens: 1500
+  });
+  
+  const response = aiResponse.content;
+  console.log(`🤖 DSL generated using ${aiResponse.provider} (${aiResponse.model}) in ${aiResponse.responseTime}ms`);
   
   // Clean up the response - remove markdown formatting if present
   let cleanedResponse = response.trim();
