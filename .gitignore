@@ -1,3 +1,9 @@
+# Environment variables
 .env
+config/.env
+
+# Dependencies
 node_modules/
-scripts/
+
+# Scripts (if any local scripts are not meant for repo)
+# scripts/

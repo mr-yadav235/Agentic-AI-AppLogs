@@ -5,9 +5,26 @@ const { aiManager } = require("./services/aiManager");
 const { configManager } = require("./services/configManager");
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
+
+// Enhanced CORS configuration for separate frontend architecture
+app.use(cors({
+  origin: [
+    'http://localhost:3001', // Frontend server
+    'http://localhost:3002', // Chat UI (if running standalone)
+    'http://localhost:3003', // Admin Console (if running standalone)
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:3002', 
+    'http://127.0.0.1:3003'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json({ limit: '10mb' }));
+
+// API-only server - no static file serving
+// Frontend applications are served by separate frontend server
 
 app.post("/query", async (req, res) => {
   const { question, preferredModel } = req.body;
@@ -252,9 +269,15 @@ app.post("/ai/query/:provider", async (req, res) => {
 // Admin Configuration Endpoints
 // =============================
 
-// Serve admin page
-app.get('/admin', (req, res) => {
-  res.sendFile(__dirname + '/public/admin.html');
+// Health check endpoint for the API server
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    service: 'Agentic AI Backend API',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '1.0.0'
+  });
 });
 
 // Get current configuration
@@ -501,13 +524,29 @@ async function startServer() {
     // Apply configuration to environment
     configManager.applyToEnvironment();
     
-    // Start server
+    // Start API server
     app.listen(3000, () => {
-      console.log("🚀 Agent listening on http://localhost:3000");
-      console.log("⚙️  Admin Panel: http://localhost:3000/admin");
-      console.log("📊 AI Stats: http://localhost:3000/ai/stats");
-      console.log("🔍 AI Health: http://localhost:3000/ai/health");
-      console.log("⚡ AI Compare: POST http://localhost:3000/ai/compare");
+      console.log('🔧 Backend API Server Configuration:');
+      console.log('=========================================');
+      console.log('🚀 API Server: http://localhost:3000');
+      console.log('📡 Health Check: http://localhost:3000/api/health');
+      console.log('');
+      console.log('📊 Available Endpoints:');
+      console.log('   POST /query - Main chat queries');
+      console.log('   GET  /ai/health - AI models health check');
+      console.log('   GET  /ai/stats - AI performance statistics');
+      console.log('   POST /ai/compare - Compare AI models');
+      console.log('   GET  /admin/config - Admin configuration');
+      console.log('   POST /admin/config/* - Save configurations');
+      console.log('   POST /admin/test-* - Test connections');
+      console.log('   POST /admin/restart - Restart system');
+      console.log('');
+      console.log('🎨 Frontend Applications:');
+      console.log('   💬 Chat Interface: http://localhost:3001');
+      console.log('   ⚙️  Admin Console: http://localhost:3001/admin');
+      console.log('   📖 Start Frontend: cd frontend && npm install && npm start');
+      console.log('');
+      console.log('✅ API Server Ready - Accepting requests from frontend applications');
     });
     
   } catch (error) {
